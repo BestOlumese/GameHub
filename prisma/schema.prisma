@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  username      String?   @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  onboarded     Boolean   @default(false)
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  rank          Rank      @default(BRONZE) 
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  MatchPlayers  MatchPlayer[]
+  Moves         Move[]
+  matchesWon    Match[]     @relation("MatchWinner")
+  GameStats     GameStat[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+enum Rank {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+  MASTER
+  GRANDMASTER
+  LEGEND
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+enum GameType {
+  TIC_TAC_TOE
+  ROCK_PAPER_SCISSORS
+}
+
+enum MatchStatus {
+  WAITING
+  ONGOING
+  FINISHED
+  CANCELLED
+}
+
+model Match {
+  id         String      @id @default(uuid())
+  gameType   GameType
+  status     MatchStatus @default(WAITING)
+  createdAt  DateTime    @default(now())
+  startedAt  DateTime?
+  endedAt    DateTime?
+  metadata   Json?       
+  winnerId   String?
+  winner     User?       @relation("MatchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+  players    MatchPlayer[]
+  moves      Move[]
+  gameState  Json?       // Current game state (board, scores, etc.)
+
+  @@index([gameType, status])
+  @@index([status, createdAt])
+  @@map("match")
+}
+
+model MatchPlayer {
+  id        String   @id @default(uuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isHost    Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+  result    PlayerResult?
+  seat      Int      
+  ready     Boolean  @default(false)
+
+  @@unique([matchId, userId])
+  @@unique([matchId, seat])
+  @@index([userId])
+  @@map("match_player")
+}
+
+enum PlayerResult {
+  WIN
+  LOSE
+  DRAW
+  DISCONNECTED
+}
+
+model Move {
+  id        String   @id @default(uuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    User     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  payload   Json  
+  turn      Int      
+  createdAt DateTime @default(now())
+
+  @@index([matchId, turn])
+  @@map("move")
+}
+
+model GameStat {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameType    GameType
+  gamesPlayed Int      @default(0)
+  gamesWon    Int      @default(0)
+  gamesLost   Int      @default(0)
+  gamesDrawn  Int      @default(0)
+  winRate     Float    @default(0)
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@unique([userId, gameType])
+  @@map("game_stat")
+}
+
+model RPSMatch {
+  id          String   @id @default(cuid())
+  player1Id   String
+  player2Id   String?
+  player1Score Int     @default(0)
+  player2Score Int     @default(0)
+  currentRound Int     @default(1)
+  totalRounds  Int     @default(3)
+  status      String   @default("waiting") // waiting, in_progress, finished
+  winnerId    String?
+  createdAt   DateTime @default(now())
+}
