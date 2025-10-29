@@ -204,8 +204,7 @@ export default async function Dashboard() {
                   <div className="text-2xl font-semibold text-red-600">
                     {data
                       ? humanizeXP(
-                          Number(data.losses) +
-                            Number(data.totalMatches - (data.wins + data.draws))
+                          Number(data.losses)
                         )
                       : 0}
                   </div>
@@ -218,7 +217,7 @@ export default async function Dashboard() {
                   <div className="text-lg font-semibold">
                     {data?.totalMatches
                       ? (
-                          (Number(data.wins) / Number(data.totalMatches)) *
+                          (Number(data.wins) / Number(data.wins + data.losses + data.draws)) *
                           100
                         ).toFixed(2)
                       : 0}
@@ -246,7 +245,7 @@ export default async function Dashboard() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Games Played</span>
-                  <span>{humanizeXP(Number(data?.totalMatches))}</span>
+                  <span>{humanizeXP(Number(data?.wins + data?.losses + data?.draws))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Games Drawn</span>

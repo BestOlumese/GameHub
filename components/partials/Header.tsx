@@ -208,10 +208,7 @@ export default function Header({ user, data }: { user: any; data: any }) {
                     <div className="font-medium text-red-600">
                       {data
                         ? humanizeXP(
-                            Number(data.losses) +
-                              Number(
-                                data.totalMatches - (data.wins + data.draws)
-                              )
+                            Number(data.losses)
                           )
                         : 0}
                     </div>
@@ -224,7 +221,7 @@ export default function Header({ user, data }: { user: any; data: any }) {
 
               <DropdownMenuItem asChild>
                 <Link
-                  href="/profile"
+                  href="/"
                   className={cn(
                     buttonVariants({ variant: "ghost" }),
                     "flex w-full justify-start gap-2 py-1.5 text-sm"
@@ -236,7 +233,7 @@ export default function Header({ user, data }: { user: any; data: any }) {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/settings"
+                  href="/"
                   className={cn(
                     buttonVariants({ variant: "ghost" }),
                     "flex w-full justify-start gap-2 py-1.5 text-sm"
